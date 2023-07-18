@@ -18,6 +18,8 @@ function OdaiElm({ odai }: { odai: Message }) {
 
   useEffect(() => {
     (async () => {
+      console.log("Process Start");
+
       const context = [odai];
 
       console.log(`${context.map((m) => m.content)}`);
@@ -42,6 +44,8 @@ function OdaiElm({ odai }: { odai: Message }) {
 
       context.push(casperRes);
       console.log(`${context.map((m) => m.content)}`);
+
+      console.log("Process End");
     })();
   }, [odai]);
 
