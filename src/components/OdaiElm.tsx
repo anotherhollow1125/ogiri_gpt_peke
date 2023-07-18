@@ -1,53 +1,17 @@
-import { useState, useEffect, useRef } from "react";
 import MessageElm from "@/components/MessageElm";
 import Grid from "@mui/material/Grid/Grid";
 import { Message } from "@/structs";
 import { get_avatar } from "@/avatar";
-import { invoke } from "@tauri-apps/api/tauri";
 
-function OdaiElm({ odai }: { odai: Message }) {
-  const [melchiorAnswer, setMelchiorAnswer] = useState<Message | undefined>(
-    undefined
-  );
-  const [balthasarAnswer, setBalthasarAnswer] = useState<Message | undefined>(
-    undefined
-  );
-  const [casperAnswer, setCasperAnswer] = useState<Message | undefined>(
-    undefined
-  );
+interface OdaiElmProps {
+  odai: Message;
+  melchiorAnswer: Message | undefined;
+  balthasarAnswer: Message | undefined;
+  casperAnswer: Message | undefined;
+}
 
-  useEffect(() => {
-    (async () => {
-      console.log("Process Start");
-
-      const context = [odai];
-
-      console.log(`${context.map((m) => m.content)}`);
-
-      const melchiorRes = await invoke<Message>("melchior", { context });
-
-      setMelchiorAnswer(melchiorRes);
-      context.push(melchiorRes);
-
-      console.log(`${context.map((m) => m.content)}`);
-
-      const balthasarRes = await invoke<Message>("balthasar", { context });
-
-      setBalthasarAnswer(balthasarRes);
-      context.push(balthasarRes);
-
-      console.log(`${context.map((m) => m.content)}`);
-
-      const casperRes = await invoke<Message>("casper", { context });
-
-      setCasperAnswer(casperRes);
-
-      context.push(casperRes);
-      console.log(`${context.map((m) => m.content)}`);
-
-      console.log("Process End");
-    })();
-  }, [odai]);
+function OdaiElm(props: OdaiElmProps) {
+  const { odai, melchiorAnswer, balthasarAnswer, casperAnswer } = props;
 
   const userElm = <MessageElm text={odai.content} avatar={get_avatar(odai)} />;
 

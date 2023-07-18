@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import PromptFieldElm from "@/components/PromptFieldElm";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useMemo } from "react";
@@ -6,61 +6,7 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import OdaiElm from "@/components/OdaiElm";
 import Grid from "@mui/material/Grid/Grid";
 import { Message } from "@/structs";
-
-function App() {
-  // https://amateur-engineer.com/react-mui-dark-mode/
-  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
-  const theme = useMemo(
-    () =>
-      createTheme({
-        palette: {
-          mode: prefersDarkMode ? "dark" : "light",
-        },
-      }),
-    [prefersDarkMode]
-  );
-
-  const [odai, setOdai] = useState<Message | undefined>(undefined);
-
-  return (
-    <ThemeProvider theme={theme}>
-      <br />
-      {odai ? <OdaiElm odai={odai} /> : <></>}
-      <Grid
-        container
-        sx={{
-          position: "absolute",
-          bottom: "0",
-          width: "100%",
-          padding: "20px",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Grid
-          item
-          xs={12}
-          sx={{ alignItems: "center", justifyContent: "center" }}
-        >
-          <PromptFieldElm
-            send={async (odai: string) =>
-              setOdai({
-                character: "user",
-                content: odai,
-              })
-            }
-          />
-        </Grid>
-      </Grid>
-    </ThemeProvider>
-  );
-}
-
-export default App;
-
-/*
-
-// 問題なかったやつ
+import { invoke } from "@tauri-apps/api/tauri";
 
 function App() {
   // https://amateur-engineer.com/react-mui-dark-mode/
@@ -86,96 +32,56 @@ function App() {
     undefined
   );
 
-  useEffect(() => {
-    if (odai === undefined) {
-      console.log("beep");
-      return;
-    }
+  const send = useCallback(async (odai_str: string) => {
+    console.log("Process Start");
 
-    (async () => {
-      const context = [odai];
+    const odai = {
+      character: "user",
+      content: odai_str,
+    };
+    setOdai(odai);
 
-      console.log(`${context.map((m) => m.content)}`);
+    const context = [odai];
 
-      const melchiorRes = await invoke<Message>("melchior", { context });
+    console.log(`${context.map((m) => m.content)}`);
 
-      setMelchiorAnswer(melchiorRes);
-      context.push(melchiorRes);
+    const melchiorRes = await invoke<Message>("melchior", { context });
 
-      console.log(`${context.map((m) => m.content)}`);
+    setMelchiorAnswer(melchiorRes);
+    context.push(melchiorRes);
 
-      const balthasarRes = await invoke<Message>("balthasar", { context });
+    console.log(`${context.map((m) => m.content)}`);
 
-      setBalthasarAnswer(balthasarRes);
-      context.push(balthasarRes);
+    const balthasarRes = await invoke<Message>("balthasar", { context });
 
-      console.log(`${context.map((m) => m.content)}`);
+    setBalthasarAnswer(balthasarRes);
+    context.push(balthasarRes);
 
-      const casperRes = await invoke<Message>("casper", { context });
+    console.log(`${context.map((m) => m.content)}`);
 
-      setCasperAnswer(casperRes);
+    const casperRes = await invoke<Message>("casper", { context });
 
-      context.push(casperRes);
-      console.log(`${context.map((m) => m.content)}`);
-    })();
-  }, [odai]);
+    setCasperAnswer(casperRes);
 
-  const userElm = odai ? (
-    <MessageElm text={odai.content} avatar={get_avatar(odai)} />
-  ) : (
-    <></>
-  );
+    context.push(casperRes);
+    console.log(`${context.map((m) => m.content)}`);
 
-  const melchiorElm = melchiorAnswer ? (
-    <MessageElm
-      text={melchiorAnswer.content}
-      avatar={get_avatar(melchiorAnswer)}
-    />
-  ) : (
-    <></>
-  );
-
-  const balthasarElm = balthasarAnswer ? (
-    <MessageElm
-      text={balthasarAnswer.content}
-      avatar={get_avatar(balthasarAnswer)}
-    />
-  ) : (
-    <></>
-  );
-
-  const casperElm = casperAnswer ? (
-    <MessageElm text={casperAnswer.content} avatar={get_avatar(casperAnswer)} />
-  ) : (
-    <></>
-  );
+    console.log("Process End");
+  }, []);
 
   return (
     <ThemeProvider theme={theme}>
       <br />
-      <Grid
-        container
-        sx={{
-          width: "100%",
-          alignItems: "center",
-          justifyContent: "center",
-          m: "0 auto",
-        }}
-      >
-        {[userElm, melchiorElm, balthasarElm, casperElm].map((elm, id) => (
-          <Grid
-            item
-            xs={12}
-            sx={{
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            key={id}
-          >
-            {elm}
-          </Grid>
-        ))}
-      </Grid>
+      {odai ? (
+        <OdaiElm
+          odai={odai}
+          melchiorAnswer={melchiorAnswer}
+          balthasarAnswer={balthasarAnswer}
+          casperAnswer={casperAnswer}
+        />
+      ) : (
+        <></>
+      )}
       <Grid
         container
         sx={{
@@ -192,17 +98,11 @@ function App() {
           xs={12}
           sx={{ alignItems: "center", justifyContent: "center" }}
         >
-          <PromptFieldElm
-            send={async (odai: string) =>
-              setOdai({
-                character: "user",
-                content: odai,
-              })
-            }
-          />
+          <PromptFieldElm send={send} />
         </Grid>
       </Grid>
     </ThemeProvider>
   );
 }
-*/
+
+export default App;
